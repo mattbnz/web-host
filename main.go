@@ -66,38 +66,36 @@ func HandleHook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Check for actual webhook stuff...
+	UpdateSite()
+	w.WriteHeader(http.StatusOK)
+}
 
+func UpdateSite() {
 	if _, err := os.Stat(GlobalConfig.WorkingDir); os.IsNotExist(err) {
 		if err := Command("/app", "git", "clone", GlobalConfig.RepoUrl, GlobalConfig.WorkingDir); err != nil {
 			log.Printf("Failed to clone repo: %v", err)
-			w.WriteHeader(http.StatusOK)
 			return
 		}
 	} else {
 		if err := Command("", "git", "pull"); err != nil {
 			log.Printf("Failed to pull repo: %v", err)
-			w.WriteHeader(http.StatusOK)
 			return
 		}
 	}
 
 	if err := Command("", "npm", "ci"); err != nil {
 		log.Println(err)
-		w.WriteHeader(http.StatusOK)
 		return
 	}
 	if err := Command(path.Join(GlobalConfig.WorkingDir, "themes/default"), "npm", "ci"); err != nil {
 		log.Println(err)
-		w.WriteHeader(http.StatusOK)
 		return
 	}
 	if err := Command("", "/app/bin/hugo", "-d", GlobalConfig.OutputDir, "-e", "review", "-D", "-F"); err != nil {
 		log.Println(err)
-		w.WriteHeader(http.StatusOK)
 		return
 	}
 	log.Println("Site updated sucessfully!")
-	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
@@ -119,6 +117,9 @@ func main() {
 			}
 		}
 	})
+
+	UpdateSite()
+
 	log.Println("listening on", GlobalConfig.Port)
 	log.Fatal(http.ListenAndServe(":"+GlobalConfig.Port, nil))
 }
