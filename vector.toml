@@ -1,0 +1,39 @@
+[sources.nats]
+  type = "nats"
+  url = "nats://[fdaa::3]:4223"
+  queue = "${QUEUE-}"
+  subject = "${SUBJECT-logs.>}"
+  auth.strategy = "user_password"
+  auth.user_password.user = "${ORG-personal}"
+  auth.user_password.password = "${ACCESS_TOKEN?}"
+  connection_name = "Fly logs stream"
+
+[transforms.log_json]
+  type = "remap"
+  inputs = ["nats"]
+  source = '''
+  . = parse_json!(.message)
+  '''
+
+[sinks.blackhole]
+  type = "blackhole"
+  inputs = ["log_json"]
+  print_interval_secs = 100000
+
+[sinks.logs-json]
+  type = "file"
+  inputs = [ "log_json" ]
+  compression = "none"
+  path = "/logs/json-%Y-%m-%d.log"
+
+  [sinks.logs-json.encoding]
+    codec = "text"
+
+[sinks.logs-nats]
+  type = "file"
+  inputs = [ "nats" ]
+  compression = "none"
+  path = "/logs/nats-%Y-%m-%d.log"
+
+  [sinks.logs-nats.encoding]
+    codec = "text"

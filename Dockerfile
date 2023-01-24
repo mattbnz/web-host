@@ -23,6 +23,10 @@ RUN apt-get update && \
         nginx \
         golang-go
 
+RUN curl -1sLf 'https://repositories.timber.io/public/vector/gpg.3543DB2D0A2BC4B8.key' |  gpg --dearmor > /usr/share/keyrings/timber-vector-archive-keyring.gpg
+RUN curl -1sLf 'https://repositories.timber.io/public/vector/config.deb.txt?distro=ubuntu&codename=kinetic' > /etc/apt/sources.list.d/timber-vector.list
+RUN apt-get update &&  apt-get install -y vector
+
 WORKDIR /app
 ENV GOPATH=/app
 RUN go install github.com/DarthSim/overmind/v2@latest
@@ -32,6 +36,7 @@ COPY Procfile .
 COPY --from=builder /app/host host
 
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY vector.toml /etc/vector/
 
 # Ref https://fly.io/docs/app-guides/multiple-processes/#use-a-procfile-manager
 ENTRYPOINT ["/app/bin/overmind", "start", "-N"]
