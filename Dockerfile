@@ -6,6 +6,7 @@ COPY go.* ./
 RUN go mod download
 
 COPY . ./
+RUN git config --global --add safe.directory /app
 RUN go build -v -o host
 
 

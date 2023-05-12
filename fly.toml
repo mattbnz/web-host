@@ -9,6 +9,7 @@ processes = []
 [env]
   PORT = "8080"
   REPO_URL = "https://github.com/mattbnz/web-matt.git"
+  METRICS_REPO_URL = "https://github.com/mattbnz/metrics"
 
 [experimental]
   auto_rollback = true
