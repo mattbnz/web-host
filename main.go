@@ -15,9 +15,11 @@ import (
 type Config struct {
 	Port string
 
-	RepoUrl    string
-	WorkingDir string
-	OutputDir  string
+	RepoUrl           string
+	MetricsRepoUrl    string
+	WorkingDir        string
+	MetricsWorkingDir string
+	OutputDir         string
 
 	Valid bool
 }
@@ -29,9 +31,14 @@ func (c *Config) Load() {
 	}
 
 	c.RepoUrl = os.Getenv("REPO_URL")
+	c.MetricsRepoUrl = os.Getenv("METRICS_REPO_URL")
 	c.WorkingDir = os.Getenv("WORKING_DIR")
 	if c.WorkingDir == "" {
 		c.WorkingDir = "/app/source"
+	}
+	c.MetricsWorkingDir = os.Getenv("METRICS_DIR")
+	if c.MetricsWorkingDir == "" {
+		c.MetricsWorkingDir = "/app/metrics"
 	}
 	c.OutputDir = os.Getenv("OUTPUT_DIR")
 	if c.OutputDir == "" {
@@ -70,19 +77,32 @@ func HandleHook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func UpdateSite() {
-	if _, err := os.Stat(GlobalConfig.WorkingDir); os.IsNotExist(err) {
-		if err := Command("/app", "git", "clone", GlobalConfig.RepoUrl, GlobalConfig.WorkingDir); err != nil {
+func clone(repo_url, work_dir string) error {
+	if _, err := os.Stat(work_dir); os.IsNotExist(err) {
+		if err := Command("/app", "git", "clone", repo_url, work_dir); err != nil {
 			log.Printf("Failed to clone repo: %v", err)
-			return
+			return err
 		}
 	} else {
 		if err := Command("", "git", "pull"); err != nil {
 			log.Printf("Failed to pull repo: %v", err)
-			return
+			return err
 		}
 	}
+	return nil
+}
 
+func UpdateSite() {
+	if err := clone(GlobalConfig.RepoUrl, GlobalConfig.WorkingDir); err != nil {
+		return
+	}
+	if err := clone(GlobalConfig.MetricsRepoUrl, GlobalConfig.MetricsWorkingDir); err != nil {
+		return
+	}
+	if err := Command("", "npm", "install", "../metrics/js"); err != nil {
+		log.Println(err)
+		return
+	}
 	if err := Command("", "npm", "ci"); err != nil {
 		log.Println(err)
 		return
