@@ -1,48 +1,52 @@
+# fly.toml app configuration file generated for mattbnz-review on 2023-07-26T23:33:55+12:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
 app = "mattbnz-review"
+primary_region = "syd"
 kill_signal = "SIGINT"
-kill_timeout = 5
-processes = []
+kill_timeout = "5s"
+
+[experimental]
+  auto_rollback = true
 
 [build]
   dockerfile = "Dockerfile"
 
 [env]
+  METRICS_REPO_URL = "https://github.com/mattbnz/metrics"
   PORT = "8080"
   REPO_URL = "https://github.com/mattbnz/web-matt.git"
-  METRICS_REPO_URL = "https://github.com/mattbnz/metrics"
 
-[experimental]
-  auto_rollback = true
+[[mounts]]
+  source = "logs"
+  destination = "/logs"
+  processes = ["app"]
 
 [[services]]
+  protocol = "tcp"
   internal_port = 8080
   processes = ["app"]
-  protocol = "tcp"
-  script_checks = []
-  tcp_checks = []
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
   [services.concurrency]
+    type = "connections"
     hard_limit = 25
     soft_limit = 20
-    type = "connections"
 
   [[services.http_checks]]
-    grace_period = "1s"
     interval = "15s"
+    timeout = "2s"
+    grace_period = "1s"
+    restart_limit = 0
     method = "get"
     path = "/healthz"
     protocol = "http"
-    restart_limit = 0
-    timeout = "2s"
-
-  [[services.ports]]
-    force_https = true
-    handlers = ["http"]
-    port = 80
-
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443
-
-[mounts]
-	source="logs"
-	destination="/logs"
