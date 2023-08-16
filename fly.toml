@@ -15,7 +15,6 @@ kill_timeout = "5s"
   dockerfile = "Dockerfile"
 
 [env]
-  METRICS_REPO_URL = "https://github.com/mattbnz/metrics"
   PORT = "8080"
   REPO_URL = "https://github.com/mattbnz/web-matt.git"
 

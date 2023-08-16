@@ -96,13 +96,6 @@ func UpdateSite() {
 	if err := clone(GlobalConfig.RepoUrl, GlobalConfig.WorkingDir); err != nil {
 		return
 	}
-	if err := clone(GlobalConfig.MetricsRepoUrl, GlobalConfig.MetricsWorkingDir); err != nil {
-		return
-	}
-	if err := Command("", "npm", "install", "../metrics/js"); err != nil {
-		log.Println(err)
-		return
-	}
 	if err := Command("", "npm", "ci"); err != nil {
 		log.Println(err)
 		return
