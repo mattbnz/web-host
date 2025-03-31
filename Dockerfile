@@ -10,7 +10,7 @@ RUN git config --global --add safe.directory /app
 RUN go build -v -o host
 
 
-FROM ubuntu:kinetic
+FROM ubuntu:oracular
 
 # Big & slow, keep separate for good caching.
 RUN apt-get update && apt-get install -y npm
@@ -24,8 +24,7 @@ RUN apt-get update && \
         nginx \
         golang-go
 
-RUN curl -1sLf 'https://repositories.timber.io/public/vector/gpg.3543DB2D0A2BC4B8.key' |  gpg --dearmor > /usr/share/keyrings/timber-vector-archive-keyring.gpg
-RUN curl -1sLf 'https://repositories.timber.io/public/vector/config.deb.txt?distro=ubuntu&codename=kinetic' > /etc/apt/sources.list.d/timber-vector.list
+RUN bash -c "$(curl -L https://setup.vector.dev)"
 RUN apt-get update &&  apt-get install -y vector
 
 WORKDIR /app
